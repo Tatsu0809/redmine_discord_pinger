@@ -1,7 +1,8 @@
 <% if User.current.allowed_to?(:audit_discord, @project) %>
   <div id="discord-pinger-source" style="display:none;">
     <a href="#" id="send-to-discord-btn" class="icon icon-comment" onclick="return false;">
-      Audit
+      <%= sprite_icon(:comment) %>
+      <span class="icon-label">Audit</span>
     </a>
   </div>
 <% end %>
