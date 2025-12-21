@@ -1,0 +1,60 @@
+<% if User.current.allowed_to?(:audit_discord, @project) %>
+  <div id="discord-pinger-source" style="display:none;">
+    <a href="#" id="send-to-discord-btn" class="icon icon-comment" onclick="return false;">
+      Audit
+    </a>
+  </div>
+<% end %>
+<script>
+$(document).ready(function() {
+  var btn = $('#send-to-discord-btn');
+    var editBtn = $('.contextual .icon-edit').first();
+  var targetArea = $('.contextual').first();
+
+  if (editBtn.length) {
+    editBtn.before(btn);
+  } else if (targetArea.length) {
+    targetArea.prepend(btn);
+  } else {
+    $('#discord-pinger-source').show();
+  }
+
+  btn.click(function(e) {
+    e.preventDefault();
+    
+    if (btn.hasClass('disabled')) return;
+    
+    var originalText = btn.text();
+    var issueId = '<%= @issue.try(:id) %>';
+
+    if (!issueId) return;
+
+    btn.addClass('disabled');
+    btn.text('送信中...');
+    btn.css('pointer-events', 'none');
+
+    $.ajax({
+      url: '/discord_pinger/send',
+      type: 'POST',
+      data: { issue_id: issueId },
+      headers: {
+        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        btn.text('送信完了');
+        setTimeout(function() { 
+          btn.text(originalText);
+          btn.removeClass('disabled');
+          btn.css('pointer-events', 'auto');
+        }, 2000);
+      },
+      error: function(xhr) {
+        alert('送信失敗: ' + (xhr.responseJSON ? xhr.responseJSON.message : 'Unknown Error'));
+        btn.text(originalText);
+        btn.removeClass('disabled');
+        btn.css('pointer-events', 'auto');
+      }
+    });
+  });
+});
+</script>
