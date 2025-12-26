@@ -1,16 +1,17 @@
 <% if User.current.allowed_to?(:audit_discord, @project) %>
   <div id="discord-pinger-source" style="display:none;">
     <a href="#" id="send-to-discord-btn" class="icon icon-comment" onclick="return false;">
-      <%= sprite_icon(:comment) %>
-      <span class="icon-label">Audit</span>
     </a>
   </div>
 <% end %>
 <script>
 $(document).ready(function() {
   var btn = $('#send-to-discord-btn');
-    var editBtn = $('.contextual .icon-edit').first();
+  var btn_html = '<%= sprite_icon(:comment) %>\n<span class="icon-label">Audit</span>\n'
+  var editBtn = $('.contextual .icon-edit').first();
   var targetArea = $('.contextual').first();
+
+  btn.append(btn_html);
 
   if (editBtn.length) {
     editBtn.before(btn);
@@ -24,14 +25,15 @@ $(document).ready(function() {
     e.preventDefault();
     
     if (btn.hasClass('disabled')) return;
-    
-    var originalText = btn.text();
+
     var issueId = '<%= @issue.try(:id) %>';
+    var sending_html = '<%= sprite_icon(:comment) %>\n<span class="icon-label">送信中...</span>\n'
+    var success_html = '<%= sprite_icon(:comment) %>\n<span class="icon-label">送信完了</span>\n'
 
     if (!issueId) return;
 
     btn.addClass('disabled');
-    btn.text('送信中...');
+    btn.html(sending_html);
     btn.css('pointer-events', 'none');
 
     $.ajax({
@@ -42,16 +44,16 @@ $(document).ready(function() {
         'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
       },
       success: function(response) {
-        btn.text('送信完了');
+        btn.html(success_html);
         setTimeout(function() { 
-          btn.text(originalText);
+          btn.html(btn_html);
           btn.removeClass('disabled');
           btn.css('pointer-events', 'auto');
         }, 2000);
       },
       error: function(xhr) {
         alert('送信失敗: ' + (xhr.responseJSON ? xhr.responseJSON.message : 'Unknown Error'));
-        btn.text(originalText);
+        btn.html(btn_html);
         btn.removeClass('disabled');
         btn.css('pointer-events', 'auto');
       }
